@@ -1,32 +1,48 @@
 import streamlit as st
-import pandas as pd
 import joblib
+import pandas as pd
 
-# Load saved model and scaler
-rf_model = joblib.load('bet_prediction_model.pkl')
-scaler = joblib.load('scaler.pkl')
+# Load the trained model
+model = joblib.load("bet_safety_model.pkl")
 
-# Ensure correct feature order for scaling
-expected_features = ['Probability', 'Home_Position', 'Away_Position', 'Position_Difference', 'ODD']
+# App title
+st.title("Bet Safety Prediction App")
 
-st.title("Bet Safety Prediction Dashboard")
+# Sidebar for user inputs
+st.sidebar.header("Input Game Details")
 
-# User inputs for prediction
-probability = st.number_input("Enter Probability", min_value=0.0, max_value=1.0, value=0.5)
-home_position = st.number_input("Enter Home Position", min_value=1, max_value=50, value=10)
-away_position = st.number_input("Enter Away Position", min_value=1, max_value=50, value=20)
-position_diff = abs(home_position - away_position)
-odd = st.number_input("Enter ODD value", min_value=1.0, value=1.5)
+# User input fields
+home_position = st.sidebar.number_input("Home Team Position", min_value=1, max_value=50, step=1, value=10)
+away_position = st.sidebar.number_input("Away Team Position", min_value=1, max_value=50, step=1, value=20)
+probability = st.sidebar.slider("Home Win Probability (%)", min_value=0, max_value=100, step=1, value=70) / 100
+odd = st.sidebar.number_input("Home Win Odds", min_value=1.0, max_value=100.0, step=0.1, value=1.5)
 
-# Prepare input data with correct order
-new_data = pd.DataFrame([[probability, home_position, away_position, position_diff, odd]],
-                        columns=expected_features)
+# Calculate Position Difference
+position_difference = abs(home_position - away_position)
 
-# Scale data while ignoring feature name mismatches
-new_data_scaled = scaler.transform(new_data.values)
+# Display calculated position difference
+st.write(f"Position Difference: {position_difference}")
 
 # Predict button
 if st.button("Predict Bet Safety"):
-    prediction = rf_model.predict(new_data_scaled)
-    prediction_label = "Safe" if prediction[0] == 1 else "Unsafe"
-    st.success(f"Predicted Bet Safety: {prediction_label}")
+    # Prepare the input data
+    input_data = pd.DataFrame({
+        "Probability": [probability],
+        "Home_Position": [home_position],
+        "Away_Position": [away_position],
+        "Position_Difference": [position_difference],
+        "ODD": [odd],
+        "Outcome": [0],  # Placeholder
+        "Difficulty": [2],  # Placeholder (e.g., "Normal")
+    })
+
+    # Make prediction
+    prediction = model.predict(input_data)[0]
+    bet_safety = "Safe" if prediction == 1 else "Unsafe"
+
+    # Display the result
+    st.subheader(f"The bet is predicted to be: **{bet_safety}**")
+
+# Footer
+st.write("---")
+st.write("This app uses a machine learning model to predict bet safety.")
