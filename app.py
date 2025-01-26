@@ -18,12 +18,12 @@ away_position = st.number_input("Enter Away Position", min_value=1, max_value=50
 position_diff = abs(home_position - away_position)
 odd = st.number_input("Enter ODD value", min_value=1.0, value=1.5)
 
-# Prepare input data with the expected feature order
+# Prepare input data with correct order
 new_data = pd.DataFrame([[probability, home_position, away_position, position_diff, odd]],
                         columns=expected_features)
 
-# Scale data with correctly ordered features
-new_data_scaled = scaler.transform(new_data)
+# Scale data while ignoring feature name mismatches
+new_data_scaled = scaler.transform(new_data.values)
 
 # Predict button
 if st.button("Predict Bet Safety"):
