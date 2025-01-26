@@ -6,6 +6,9 @@ import joblib
 rf_model = joblib.load('bet_prediction_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
+# Ensure correct feature order for scaling
+expected_features = ['Probability', 'Home_Position', 'Away_Position', 'Position_Difference', 'ODD']
+
 st.title("Bet Safety Prediction Dashboard")
 
 # User inputs for prediction
@@ -15,16 +18,11 @@ away_position = st.number_input("Enter Away Position", min_value=1, max_value=50
 position_diff = abs(home_position - away_position)
 odd = st.number_input("Enter ODD value", min_value=1.0, value=1.5)
 
-# Prepare input data (only the features used for prediction)
-new_data = pd.DataFrame({
-    'Probability': [probability],
-    'Home_Position': [home_position],
-    'Away_Position': [away_position],
-    'Position_Difference': [position_diff],
-    'ODD': [odd]
-})
+# Prepare input data with the expected feature order
+new_data = pd.DataFrame([[probability, home_position, away_position, position_diff, odd]],
+                        columns=expected_features)
 
-# Scale data
+# Scale data with correctly ordered features
 new_data_scaled = scaler.transform(new_data)
 
 # Predict button
